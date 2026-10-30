@@ -1,0 +1,24 @@
+/*!
+ * Copyright (c) 2024 PLANKA Software GmbH
+ * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
+ */
+
+:global(#app) {
+  // Sits under the toggle it belongs to: pulled up out of that toggle's 16px
+  // gap so only a few pixels separate the two, and carrying the full 16px on
+  // its own underside so the next toggle keeps its distance.
+  .hint {
+    color: #666666;
+    margin-bottom: 16px;
+    margin-top: -12px;
+  }
+
+  .radio {
+    margin-bottom: 16px;
+    width: 100%;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}

@@ -1,0 +1,99 @@
+diff --git a/node_modules/@gravity-ui/markdown-editor/build/esm/bundle/wysiwyg-preset.js b/node_modules/@gravity-ui/markdown-editor/build/esm/bundle/wysiwyg-preset.js
+index b4f89ce..0bd3285 100644
+--- a/node_modules/@gravity-ui/markdown-editor/build/esm/bundle/wysiwyg-preset.js
++++ b/node_modules/@gravity-ui/markdown-editor/build/esm/bundle/wysiwyg-preset.js
+@@ -110,7 +110,6 @@ export const BundlePreset = (builder, opts) => {
+             enableNewImageSizeCalculation: opts.enableNewImageSizeCalculation,
+             ...opts.imgSize,
+         },
+-        checkbox: { checkboxLabelPlaceholder: () => i18nPlaceholder('checkbox'), ...opts.checkbox },
+         deflist: {
+             deflistTermPlaceholder: () => i18nPlaceholder('deflist_term'),
+             deflistDescPlaceholder: () => i18nPlaceholder('deflist_desc'),
+@@ -131,11 +130,6 @@ export const BundlePreset = (builder, opts) => {
+             ...opts.yfmTable,
+             controls: opts.mobile ? false : opts.yfmTable?.controls,
+         },
+-        yfmFile: {
+-            fileUploadHandler: opts.fileUploadHandler,
+-            needToSetDimensionsForUploadedImages: opts.needToSetDimensionsForUploadedImages,
+-            ...opts.yfmFile,
+-        },
+         yfmHeading: {
+             h1Key: f.toPM(A.Heading1),
+             h2Key: f.toPM(A.Heading2),
+diff --git a/node_modules/@gravity-ui/markdown-editor/build/esm/core/ExtensionsManager.js b/node_modules/@gravity-ui/markdown-editor/build/esm/core/ExtensionsManager.js
+index 8aefe20..99e59e3 100644
+--- a/node_modules/@gravity-ui/markdown-editor/build/esm/core/ExtensionsManager.js
++++ b/node_modules/@gravity-ui/markdown-editor/build/esm/core/ExtensionsManager.js
+@@ -42,6 +42,9 @@ export class ExtensionsManager {
+         if (options.linkifyTlds) {
+             this.#mdForMarkup.linkify.tlds(options.linkifyTlds, true);
+             this.#mdForText.linkify.tlds(options.linkifyTlds, true);
++        } else if (options.linkifyTlds === null) {
++            this.#mdForMarkup.linkify.set({ fuzzyLink: false });
++            this.#mdForText.linkify.set({ fuzzyLink: false });
+         }
+         if (options.pmTransformers) {
+             this.#pmTransformers = options.pmTransformers;
+diff --git a/node_modules/@gravity-ui/markdown-editor/build/esm/extensions/markdown/CodeBlock/CodeBlockHighlight/TooltipPlugin/CodeBlockToolbar.js b/node_modules/@gravity-ui/markdown-editor/build/esm/extensions/markdown/CodeBlock/CodeBlockHighlight/TooltipPlugin/CodeBlockToolbar.js
+index 15b6c46..43e8b5a 100644
+--- a/node_modules/@gravity-ui/markdown-editor/build/esm/extensions/markdown/CodeBlock/CodeBlockHighlight/TooltipPlugin/CodeBlockToolbar.js
++++ b/node_modules/@gravity-ui/markdown-editor/build/esm/extensions/markdown/CodeBlock/CodeBlockHighlight/TooltipPlugin/CodeBlockToolbar.js
+@@ -73,13 +73,6 @@ export function CodeBlockToolbar({ node, pos, editorView, langItems, mapping, sh
+                             });
+                         },
+                     },
+-                {
+-                    id: 'code-block-copy',
+-                    type: ToolbarDataType.ReactNodeFn,
+-                    width: 28,
+-                    content: () => _jsx(ClipboardButton, { text: copyText }),
+-                    noRerenderOnUpdate: true,
+-                },
+             ].filter(isTruthy),
+             [
+                 {
+diff --git a/node_modules/@gravity-ui/markdown-editor/build/esm/extensions/yfm/YfmNote/YfmNoteSpecs/parser.js b/node_modules/@gravity-ui/markdown-editor/build/esm/extensions/yfm/YfmNote/YfmNoteSpecs/parser.js
+index a8041f2..eff5b1d 100644
+--- a/node_modules/@gravity-ui/markdown-editor/build/esm/extensions/yfm/YfmNote/YfmNoteSpecs/parser.js
++++ b/node_modules/@gravity-ui/markdown-editor/build/esm/extensions/yfm/YfmNote/YfmNoteSpecs/parser.js
+@@ -26,7 +26,7 @@ const parserTokens = {
+ };
+ export const YfmNoteParserSpecs = (builder) => {
+     builder
+-        .configureMd((md) => md.use(yfmPlugin, { log, lang: getConfig().lang || 'en' }))
++        .configureMd((md) => md.use(yfmPlugin, { log, lang: getConfig().lang || 'en', notesAutotitle: false }))
+         .addMarkdownTokenParserSpec('yfm_note', () => parserTokens[NoteNode.Note])
+         .addMarkdownTokenParserSpec('yfm_note_title', () => parserTokens[NoteNode.NoteTitle])
+         .addMarkdownTokenParserSpec('yfm_note_content', () => parserTokens[NoteNode.NoteContent]);
+diff --git a/node_modules/@gravity-ui/markdown-editor/build/esm/presets/yfm.js b/node_modules/@gravity-ui/markdown-editor/build/esm/presets/yfm.js
+index 4c374fb..199ebf4 100644
+--- a/node_modules/@gravity-ui/markdown-editor/build/esm/presets/yfm.js
++++ b/node_modules/@gravity-ui/markdown-editor/build/esm/presets/yfm.js
+@@ -1,6 +1,6 @@
+ import { Deflist, Subscript, Superscript, Underline, } from "../extensions/markdown/index.js";
+ import { ImageSpecs } from "../extensions/markdown/Image/ImageSpecs/index.js";
+-import { Checkbox, ImgSize, Monospace, Video, YfmConfigs, YfmCut, YfmFile, YfmHeading, YfmNote, YfmTable, YfmTabs, } from "../extensions/yfm/index.js";
++import { ImgSize, Monospace, Video, YfmConfigs, YfmCut, YfmHeading, YfmNote, YfmTable, } from "../extensions/yfm/index.js";
+ import { DefaultPreset } from "./default.js";
+ export const YfmPreset = (builder, opts) => {
+     builder.use(DefaultPreset, {
+@@ -13,16 +13,13 @@ export const YfmPreset = (builder, opts) => {
+         .use(Subscript)
+         .use(Superscript)
+         .use(Underline, opts.underline ?? {})
+-        .use(Checkbox, opts.checkbox ?? {})
+         .use(ImgSize, opts.imgSize ?? {})
+         .use(Monospace)
+         .use(Video, opts.video ?? {})
+         .use(YfmConfigs, opts.yfmConfigs ?? {})
+         .use(YfmCut, opts.yfmCut ?? {})
+         .use(YfmNote, opts.yfmNote ?? {})
+-        .use(YfmFile, opts.yfmFile ?? {})
+         .use(YfmHeading, opts.yfmHeading ?? {})
+-        .use(YfmTable, opts.yfmTable ?? {})
+-        .use(YfmTabs);
++        .use(YfmTable, opts.yfmTable ?? {});
+ };
+ //# sourceMappingURL=yfm.js.map
